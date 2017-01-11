@@ -1,3 +1,19 @@
+##2016/03/18 - Releasing 0.5.1
+
+* GH-146 Set aws_cli_install default to false
+* GH-142 Fix wget cookie options
+* GH-114 Document extract customization options
+* open file in binary mode when writing files for windows download
+
+##2016/03/10 - Releasing 0.5.0
+
+* GH-55 use net::http to stream files
+* Add additional documentation
+* Simplify duplicate code in download/content methods
+* Pin rake to avoid rubocop/rake 11 incompatibility
+* Surface "checksum_verify" parameter in archive::nexus
+* GH-48 S3 bucket support
+
 ##2016/3/2 - Releasing 0.4.8
 
 * VoxPupuli Release

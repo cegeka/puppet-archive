@@ -1,19 +1,21 @@
 begin
   require 'puppet_x/bodeco/archive'
+  require 'puppet_x/bodeco/util'
 rescue LoadError
   require 'pathname' # WORK_AROUND #14073 and #7788
   archive = Puppet::Module.find('archive', Puppet[:environment].to_s)
   raise(LoadError, "Unable to find archive module in modulepath #{Puppet[:basemodulepath] || Puppet[:modulepath]}") unless archive
   require File.join archive.path, 'lib/puppet_x/bodeco/archive'
+  require File.join archive.path, 'lib/puppet_x/bodeco/util'
 end
 
 require 'securerandom'
 require 'tempfile'
 
 Puppet::Type.type(:archive).provide(:ruby) do
+  optional_commands :aws => 'aws'
+  defaultfor :feature => :microsoft_windows
   attr_reader :archive_checksum
-
-  confine :true => false # This is NEVER a valid provider. It is just used as a base class
 
   def exists?
     if extracted?
@@ -124,6 +126,8 @@ Puppet::Type.type(:archive).provide(:ruby) do
     when /^file/
       uri = URI(resource[:source])
       FileUtils.copy(Puppet::Util.uri_to_path(uri), temppath)
+    when /^s3/
+      s3_download(temppath)
     else
       raise(Puppet::Error, "Source file: #{resource[:source]} does not exists.") unless File.exist?(resource[:source])
       FileUtils.copy(resource[:source], temppath)
@@ -139,7 +143,26 @@ Puppet::Type.type(:archive).provide(:ruby) do
     FileUtils.mv(temppath, archive_filepath)
   end
 
-  def download
-    raise(NotImplementedError, 'The Ruby provider does not implement download method.')
+  def download(filepath)
+    PuppetX::Bodeco::Util.download(resource[:source], filepath, :username => resource[:username], :password => resource[:password], :cookie => resource[:cookie], :proxy_server => resource[:proxy_server], :proxy_type => resource[:proxy_type])
+  end
+
+  def s3_download(path)
+    params = [
+      's3',
+      'cp',
+      resource[:source],
+      path
+    ]
+
+    aws(params)
+  end
+
+  def optional_switch(value, option)
+    if value
+      option.collect { |flags| flags % value }
+    else
+      []
+    end
   end
 end
