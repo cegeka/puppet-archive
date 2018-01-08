@@ -368,3 +368,4 @@ RSpec.configure do |c|
   c.default_facts = { :puppetversion => Puppet.version }
 end
 ```
+
